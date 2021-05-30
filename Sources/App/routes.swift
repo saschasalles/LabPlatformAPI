@@ -5,4 +5,5 @@ func routes(_ app: Application) throws {
     app.get { req in
         return "Welcome to LabPlatform API"
     }
+    try app.register(collection: UserController())
 }

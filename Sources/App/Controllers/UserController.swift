@@ -10,6 +10,8 @@ import Vapor
 import Fluent
 
 struct UserSignup: Content {
+  let firstName: String
+  let lastName: String
   let email: String
   let password: String
 }
@@ -33,18 +35,27 @@ struct UserController: RouteCollection {
     usersRoute.post("signup", use: create)
   }
 
-  fileprivate func create(req: Request) throws -> EventLoopFuture<User.Public> {
+  fileprivate func create(req: Request) throws -> EventLoopFuture<NewSession> {
     try UserSignup.validate(content: req)
     let userSignup = try req.content.decode(UserSignup.self)
     let user = try User.create(from: userSignup)
+
+    var token: Token!
+
 
     return checkIfUserExists(userSignup.email, req: req).flatMap { exists in
       guard !exists else {
         return req.eventLoop.future(error: UserError.emailTaken)
       }
       return user.save(on: req.db)
+    }.flatMap {
+      guard let newToken = try? user.createToken(source: .signup) else {
+        return req.eventLoop.future(error: Abort(.internalServerError))
+      }
+      token = newToken
+      return token.save(on: req.db)
     }.flatMapThrowing {
-      try user.asPublic()
+      NewSession(token: token.value, user: try user.asPublic())
     }
   }
 
