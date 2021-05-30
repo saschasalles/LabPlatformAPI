@@ -10,8 +10,7 @@ import Vapor
 
 final class User: Model {
   struct Public: Content {
-    let firstName: String
-    let lastName: String
+    let email: String
     let id: UUID
     let createdAt: Date?
     let updatedAt: Date?
@@ -60,6 +59,20 @@ final class User: Model {
     self.useBiometrics = false
     self.profilePicture = profilePicture
     self.passwordHash = passwordHash
+  }
+}
+
+extension User {
+  static func create(from userSignup: UserSignup) throws -> User {
+    throw Abort(.notImplemented)
+  }
+
+  func asPublic() throws -> Public {
+    Public(email: email,
+           id: try requireID(),
+           createdAt: createdAt,
+           updatedAt: updatedAt)
+
   }
 }
 
