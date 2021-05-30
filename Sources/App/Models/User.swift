@@ -8,6 +8,11 @@
 import Fluent
 import Vapor
 
+enum UserRoles: Int {
+  case consumer = 1
+  case admin
+}
+
 final class User: Model {
   struct Public: Content {
     let id: UUID
@@ -16,6 +21,7 @@ final class User: Model {
     let email: String
     let useBiometrics: Bool
     let profilePicture: String?
+    let role: Int
     let createdAt: Date?
     let updatedAt: Date?
   }
@@ -33,6 +39,9 @@ final class User: Model {
 
   @Field(key: "email")
   var email: String
+
+  @Field(key: "role")
+  var role: Int
 
   @Field(key: "account_enabled")
   var accountEnabled: Bool
@@ -59,6 +68,7 @@ final class User: Model {
     self.firstName = firstName
     self.lastName = lastName
     self.email = email
+    self.role = UserRoles.consumer.rawValue
     self.accountEnabled = false
     self.useBiometrics = false
     self.profilePicture = profilePicture
@@ -90,6 +100,7 @@ extension User {
       email: email,
       useBiometrics: useBiometrics,
       profilePicture: profilePicture,
+      role: role,
       createdAt: createdAt,
       updatedAt: updatedAt)
   }
