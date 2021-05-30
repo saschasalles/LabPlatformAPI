@@ -26,8 +26,11 @@ public func configure(_ app: Application) throws {
   ), as: .psql)
 
   app.middleware.use(ErrorMiddleware.default(environment: app.environment))
+
   app.migrations.add(CreateUsers())
+  app.migrations.add(CreateTokens())
+
   try app.autoMigrate().wait()
-  // register routes
+  
   try routes(app)
 }
