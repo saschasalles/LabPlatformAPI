@@ -8,6 +8,11 @@
 import Fluent
 import Vapor
 
+enum UserRoles: Int {
+  case consumer = 1
+  case admin
+}
+
 final class User: Model {
   struct Public: Content {
     let id: UUID
@@ -15,7 +20,9 @@ final class User: Model {
     let lastName: String
     let email: String
     let useBiometrics: Bool
+    let accountEnabled: Bool
     let profilePicture: String?
+    let role: Int
     let createdAt: Date?
     let updatedAt: Date?
   }
@@ -33,6 +40,9 @@ final class User: Model {
 
   @Field(key: "email")
   var email: String
+
+  @Field(key: "role")
+  var role: Int
 
   @Field(key: "account_enabled")
   var accountEnabled: Bool
@@ -54,13 +64,22 @@ final class User: Model {
 
   init() { }
 
-  init(id: UUID? = nil, firstName: String, lastName: String, email: String, passwordHash: String, profilePicture: String? = nil) {
+  init(id: UUID? = nil,
+       firstName: String,
+       lastName: String,
+       email: String,
+       role: Int = UserRoles.consumer.rawValue,
+       accountEnabled: Bool = false,
+       useBiometrics: Bool = false,
+       passwordHash: String,
+       profilePicture: String? = nil) {
     self.id = id
     self.firstName = firstName
     self.lastName = lastName
     self.email = email
-    self.accountEnabled = false
-    self.useBiometrics = false
+    self.role = role
+    self.accountEnabled = accountEnabled
+    self.useBiometrics = useBiometrics
     self.profilePicture = profilePicture
     self.passwordHash = passwordHash
   }
@@ -74,6 +93,15 @@ extension User {
          passwordHash: try Bcrypt.hash(userSignup.password))
   }
 
+  static func createAdmin(from userSignup: UserSignup) throws -> User {
+    User(firstName: userSignup.firstName,
+         lastName: userSignup.lastName,
+         email: userSignup.email,
+         role: UserRoles.admin.rawValue,
+         accountEnabled: true,
+         passwordHash: try Bcrypt.hash(userSignup.password))
+  }
+
   func createToken(source: SessionSource) throws -> Token {
     let calendar = Calendar(identifier: .gregorian)
     let expiryDate = calendar.date(byAdding: .year, value: 1, to: Date())
@@ -82,6 +110,7 @@ extension User {
                      expiresAt: expiryDate)
   }
 
+
   func asPublic() throws -> Public {
     Public(
       id: try requireID(),
@@ -89,7 +118,9 @@ extension User {
       lastName: lastName,
       email: email,
       useBiometrics: useBiometrics,
+      accountEnabled: accountEnabled,
       profilePicture: profilePicture,
+      role: role,
       createdAt: createdAt,
       updatedAt: updatedAt)
   }
