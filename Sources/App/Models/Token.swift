@@ -54,7 +54,6 @@ extension Token: ModelTokenAuthenticatable {
     guard let expiryDate = expiresAt else {
       return true
     }
-
     return expiryDate > Date()
   }
 }

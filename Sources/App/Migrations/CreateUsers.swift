@@ -15,6 +15,7 @@ struct CreateUsers: Migration {
       .field("lastname", .string, .required)
       .field("email", .string, .required)
       .unique(on: "email")
+      .field("role", .int, .required)
       .field("password_hash", .string, .required)
       .field("created_at", .datetime, .required)
       .field("updated_at", .datetime, .required)
