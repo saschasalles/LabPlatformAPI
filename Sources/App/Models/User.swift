@@ -83,7 +83,15 @@ extension User {
            id: try requireID(),
            createdAt: createdAt,
            updatedAt: updatedAt)
+  }
+}
 
+extension User: ModelAuthenticatable {
+  static let usernameKey = \User.$email
+  static let passwordHashKey = \User.$passwordHash
+
+  func verify(password: String) throws -> Bool {
+    try Bcrypt.verify(password, created: self.passwordHash)
   }
 }
 

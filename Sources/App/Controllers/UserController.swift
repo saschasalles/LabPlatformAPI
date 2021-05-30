@@ -33,6 +33,8 @@ struct UserController: RouteCollection {
   func boot(routes: RoutesBuilder) throws {
     let usersRoute = routes.grouped("users")
     usersRoute.post("signup", use: create)
+    let tokenProtected = usersRoute.grouped(Token.authenticator())
+    tokenProtected.get("me", use: getMyOwnUser)
   }
 
   fileprivate func create(req: Request) throws -> EventLoopFuture<NewSession> {
@@ -64,7 +66,7 @@ struct UserController: RouteCollection {
   }
 
   func getMyOwnUser(req: Request) throws -> User.Public {
-    throw Abort(.notImplemented)
+    try req.auth.require(User.self).asPublic()
   }
 
   private func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
